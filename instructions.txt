@@ -1,0 +1,57 @@
+# Django Rest Framework Notes API
+
+This is a Django Rest Framework (DRF) project for Sacco. 
+
+## Getting Started
+
+Follow these steps to set up and run the project locally.
+
+### Prerequisites
+
+- Python (3.6+ recommended)
+- Virtual Environment (optional but recommended)
+
+### Clone the Repository
+
+Use the following command to clone the repository to your local machine:
+
+```bash
+git clone 
+
+### Setup
+
+Create a virtual environment (optional but recommended):
+
+```bash
+python -m venv venv
+
+## Activate the virtual environment:
+
+- On Windows: venv\Scripts\activate
+
+- On macOS and Linux: source venv/bin/activate
+
+## Navigate to the project directory
+
+- cd 
+
+## Install project dependencies from requirements.txt:
+
+- pip install -r requirements.txt
+
+## Create a .env file for environment variables. You can use the provided .env.example as a template.
+
+- cp .env.example .env
+
+## Run database migrations:
+
+- python manage.py migrate
+
+
+## Run the Development Server
+Start the Django development server:
+
+- python manage.py runserver
+
+
+- The API will be available at http://localhost:8000/.
