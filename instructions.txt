@@ -16,7 +16,7 @@ Follow these steps to set up and run the project locally.
 Use the following command to clone the repository to your local machine:
 
 ```bash
-git clone 
+git clone https://github.com/isiagi/ada_backend.git
 
 ### Setup
 
@@ -39,9 +39,6 @@ python -m venv venv
 
 - pip install -r requirements.txt
 
-## Create a .env file for environment variables. You can use the provided .env.example as a template.
-
-- cp .env.example .env
 
 ## Run database migrations:
 
