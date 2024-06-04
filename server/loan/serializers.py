@@ -1,0 +1,26 @@
+from rest_framework import serializers
+from django.contrib.auth.models import User
+from .models import Loan
+
+class LoanSerializer(serializers.ModelSerializer):
+    # Set user field to the current logged In user. 
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = Loan
+        fields = '__all__'
+   
+
+
+class LoanTotalSerializer(serializers.Serializer):
+    amount__sum = serializers.IntegerField()
+
+
+class LoanActiveSerializer(serializers.Serializer):
+    total_remaining_amount = serializers.IntegerField()
+    count_remaining_gt_Zero= serializers.IntegerField()
+
+
+
+# 0726666256
+# 0708930675(chosen)

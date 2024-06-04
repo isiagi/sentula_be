@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-7279xm&pj_!(x)@e079-^nh*=)mxx3#a!66$_d_y$k5k_@60f=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['10.0.2.2', '127.0.0.1']
 
 
 # Application definition
@@ -37,7 +37,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "corsheaders",
     'rest_framework',
+    'drf_extra_fields',
+    'rest_framework.authtoken',
+    'userauth',
+    'saving',
+    'wagubumbuzi',
+    'loan',
+    'payment',
+    'userprofile',
+    'borrower',
 ]
 
 MIDDLEWARE = [
@@ -48,6 +58,19 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+]
+
+CORS_ALLOW_ALL_ORIGINS = True    #Allow all origins
+
+# CORS_ALLOWED_ORIGINS = [
+#     'http://localhost:5173',
+#     'https://notes-client-drab.vercel.app'
+# ]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+   'http://localhost:5173'
 ]
 
 ROOT_URLCONF = 'server.urls'
@@ -70,14 +93,37 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'server.wsgi.application'
 
+import environ
+import os
+
+# Initialize Django-environ
+env = environ.Env(DEBUG=(bool, False))
+
+# Define a path to your project's .env file (optional)
+env_file = os.path.join(BASE_DIR, ".env")
+
+# Load environment variables from the .env file (if it exists)
+env.read_env(env_file)
+
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': env("DB_NAME"),
+        'HOST': env("DB_HOST"),
+        'PORT': env("DB_PORT"),
+        'PASSWORD': env("DB_PASSWORD"),
+        'USER': env("DB_USER"),
     }
 }
 
@@ -112,6 +158,11 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Actual directory
+MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'mediafiles')
+
+# URL used to access the media
+MEDIA_URL = '/media/'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
@@ -122,3 +173,13 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Email Service
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = env("HOST_USER")
+EMAIL_HOST_PASSWORD = env("HOST_PASSWORD")
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
