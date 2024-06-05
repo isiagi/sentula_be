@@ -9,8 +9,14 @@ class LoanSerializer(serializers.ModelSerializer):
     class Meta:
         model = Loan
         fields = '__all__'
+        extra_kwargs = {
+            'remaining_amount': {'required': False},
+        }
    
-
+    def validate(self, data):
+        if 'remaining_amount' not in data:
+            data['remaining_amount'] = data.get('amount', 0)  # Default to amount if not provided
+        return data
 
 class LoanTotalSerializer(serializers.Serializer):
     amount__sum = serializers.IntegerField()
