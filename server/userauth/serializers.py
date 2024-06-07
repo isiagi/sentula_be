@@ -1,21 +1,41 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from .models import CustomUser
 
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+import re
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer): 
 
     class Meta(object):
-        model = User
+        model = CustomUser
         fields = ['id','username', 'email', 'first_name', 'last_name','password'] 
+    
+    def validate_username(self, value):
+        # Custom validation logic for usernames in the format ADA/90826/2024
+        if not re.match(r'^[A-Z]{3}/\d{3}/\d{4}$', value):
+            raise serializers.ValidationError("Membership Id must be in the format ADA/000/2024")
+        return value
+    
+    def create(self, validated_data):
+        user = CustomUser.objects.create_user(**validated_data)
+        return user
 
+    def update(self, instance, validated_data):
+        # instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        if 'password' in validated_data:
+            instance.set_password(validated_data['password'])
+        instance.save()
+        return instance
 
 class SignSerializer(serializers.ModelSerializer):
 
     class Meta(object):
-        model = User
+        model = CustomUser
         
         exclude = ('password','username',)
 
@@ -68,7 +88,7 @@ class ResetPasswordSerializer(serializers.Serializer):
         pk = urlsafe_base64_decode(encoded_pk).decode()
 
         # Get user object with matching id or primary key.
-        user = User.objects.get(pk=pk)
+        user = CustomUser.objects.get(pk=pk)
 
 
         # Check if the sent token matches with the user object got from above

@@ -22,6 +22,15 @@ from userprofile.models import UserProfile
 import random
 import string
 from datetime import datetime
+from .models import CustomUser
+
+from django.db.models import Sum
+
+from saving.models import Saving
+from loan.models import Loan
+from borrower.models import Borrower
+from payment.models import Payment
+from wagubumbuzi.models import Wagubumbuzi
 
 
 # Users 
@@ -41,23 +50,23 @@ class GetUsersApiView(ListAPIView):
 
     def get_queryset(self):
         User = get_user_model()
-        user = User.objects.all()
+        user = CustomUser.objects.all()
 
-        return User.objects.values()
+        return CustomUser.objects.values()
     
 class UserDetailApiView(RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
-    queryset = User.objects.all()
+    queryset = CustomUser.objects.all()
 
 class UserDeleteApi(DestroyAPIView):
-   queryset = User.objects.all()
+   queryset = CustomUser.objects.all()
    serializer_class = UserSerializer
 
 # Login View
 @api_view(['POST'])
 def login(request):
     # check if user exists or raise exception with 404
-    user = get_object_or_404(User, username = request.data['Member_Id'])
+    user = get_object_or_404(CustomUser, username = request.data['Member_Id'])
 
     # check if database password & provided password match
     if not user.check_password(request.data['Password']):
@@ -95,11 +104,17 @@ def signup(request):
         today = datetime.now()
 
         return f"ADA/{identifier}/{today.year}"
+    
+    # Get username from request data
+    membership_id = request.data.get('username')
+
+    # Valid ID
+    valid_id = f"ADA/{membership_id}/{datetime.now().year}"
 
     # check serialization valid
     if serializer.is_valid():
         # save user data to database
-        tst = serializer.save(username=generate_unique_identifier(), password="")
+        tst = serializer.save(username=valid_id, password="")
 
         # create profile with saved user
         UserProfile.objects.create(user=tst)
@@ -127,7 +142,7 @@ def check_member(request):
     serializer = MemberSerializer(data=request.data)
 
     if serializer.is_valid():
-        user = User.objects.get(username = request.data['membership_id'], password = "")
+        user = CustomUser.objects.get(username = request.data['membership_id'], password = "")
 
         if not user or user == None:
             return Response({"Error": 'Membership Id not found'}, status=status.HTTP_400_BAD_REQUEST)
@@ -142,7 +157,7 @@ def check_member(request):
 
 @api_view(['GET'])
 def get_membership_ids(request):
-    membership_ids = User.objects.values_list('username', flat=True)
+    membership_ids = CustomUser.objects.values_list('username', flat=True)
 
     return Response(membership_ids)
 
@@ -160,7 +175,7 @@ def combine_names(data):
 
 @api_view(['GET'])
 def get_members_names(request):
-    members = User.objects.all().values('first_name', 'last_name')
+    members = CustomUser.objects.all().values('first_name', 'last_name')
 
     combined_members = combine_names(list(members))
 
@@ -173,7 +188,7 @@ def createpassword(request):
 
     if serializer.is_valid():
         # check for user in DB and hash password.
-        user = User.objects.get(username = request.data['membership'])
+        user = CustomUser.objects.get(username = request.data['membership'])
 
         # Hash and Set Password
         user.set_password(request.data['password'])
@@ -220,7 +235,7 @@ def forgot_password(request):
     print("email", email)
     
     # Find the first entry of the email from the user table
-    user = User.objects.filter(email=email).first()
+    user = CustomUser.objects.filter(email=email).first()
 
     if user:
         # Make encrptyed text for the user id
@@ -256,4 +271,27 @@ def reset_password(request, *args, **kwargs):
     return Response({"message": "Password reset successfully"}, status=status.HTTP_200_OK)
 
 
+class GetTotalApiView(ListAPIView):
+    serializer_class = MemberSerializer
+    queryset = CustomUser.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        queryset = CustomUser.objects.all()
+        borrowerset = Borrower.objects.all().count()
+        total = queryset.count()
+        savingset = Saving.objects.aggregate(total_saving = Sum('amount'))
+        total_loan = Loan.objects.aggregate(total_laon = Sum('amount'))
+        total_payment = Payment.objects.aggregate(total_payment = Sum('amount'))
+        total_wagubumbuzi = Wagubumbuzi.objects.aggregate(total_Wagubumbuzi = Sum('amount'))
+
+        data = {
+            'totalMembers': total,
+            'total_saving': savingset,
+            'total_laon': total_loan,
+            'total_payment': total_payment,
+            'total_wagubumbuzi': total_wagubumbuzi,
+            'total_borrower': borrowerset
+        }
+
+        return Response(data)
     

@@ -12,7 +12,7 @@ from saving.models import Saving
 from django.contrib.auth.models import User
 from borrower.models import Borrower
 from django.shortcuts import get_object_or_404
-
+from userauth.models import CustomUser
 # Create your views here.
 
 @api_view(['GET'])
@@ -88,7 +88,7 @@ class GetActiveLoanApiView(ListAPIView):
         total_loan = queryset.aggregate(total_laon = Sum('amount'))
         total_remaining_amount = queryset.filter(remaining_amount__gt=0).aggregate(total_remaining_amount = Sum('remaining_amount'))
         count = queryset.filter(remaining_amount__gt=0).count()
-        user_count = User.objects.count()
+        user_count = CustomUser.objects.count()
 
         data = {
             'total_laon': total_loan['total_laon'],

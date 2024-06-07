@@ -1,4 +1,4 @@
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, DestroyAPIView
 from .models import Wagubumbuzi
 from .serializers import WagubumbuziSerializer
 from rest_framework.permissions import IsAuthenticated
@@ -9,6 +9,13 @@ class WagubumbuziApiView(ListAPIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
+
+    serializer_class = WagubumbuziSerializer
+    queryset = Wagubumbuzi.objects.all()
+
+class WagubumbuziDeleteApiView(DestroyAPIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
     serializer_class = WagubumbuziSerializer
     queryset = Wagubumbuzi.objects.all()

@@ -2,13 +2,14 @@ from rest_framework import serializers
 from .models import UserProfile
 from django.contrib.auth.models import User
 from drf_extra_fields.fields import Base64ImageField
+from userauth.models import CustomUser
 
 
 # serializer to exclude some user fields when extracting user
 class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = User
+        model = CustomUser
         exclude = ('password','user_permissions', 'groups',)
 
 

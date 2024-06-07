@@ -1,10 +1,11 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from userauth.models import CustomUser
 from .models import Loan
 
 class LoanSerializer(serializers.ModelSerializer):
     # Set user field to the current logged In user. 
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), default=serializers.CurrentUserDefault())
+    user = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), default=serializers.CurrentUserDefault())
 
     class Meta:
         model = Loan

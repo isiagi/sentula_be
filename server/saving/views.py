@@ -12,6 +12,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.db.models.functions import ExtractMonth, ExtractWeek, ExtractYear
 from django.db.models import Sum
+from django.db.models import Q
 
 # Create your views here.
 
@@ -60,11 +61,39 @@ class GetSavingApiView(ListCreateAPIView):
 class SavingDetailApiView(RetrieveUpdateDestroyAPIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
-
     queryset = Saving.objects.all()
     serializer_class = SavingSerializer
 
+    def perform_update(self, serializer):
+        # Fetch the new amount from the validated data
+        new_amount = int(serializer.validated_data.get('amount', 0))
+        
+        # Deduct 5000 from the new amount
+        updated_amount = new_amount - 5000
+        
+        # Update the amount in the validated data
+        serializer.validated_data['amount'] = updated_amount
+        
+        # Save the updated object with the new amount
+        serializer.save()  
 
+    def perform_destroy(self, instance):        # Fetch the user associated with the instance
+        user = instance.user_id
+
+        print(user, 'user')
+
+        # Check if it's the first entry of the month
+        today = instance.date_of_payment
+        if Saving.objects.filter(user_id=user, date_of_payment__month=today.month).count() == 1:
+            # Delete all user Wagubumbuzi objects of that month
+            Wagubumbuzi.objects.filter(
+                user=user,
+                date_created__year=today.year,
+                date_created__month=today.month
+            ).delete()
+
+        # Proceed with the deletion of the Saving instance
+        instance.delete()
 
 # API route to handle GET Data Sum By week in a month
 class GetSavingByWeekApiView(ListAPIView):

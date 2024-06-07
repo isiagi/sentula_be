@@ -6,6 +6,7 @@ urlpatterns = [
     path('login/', views.login, name='login'),
     path('member/', views.check_member, name='member'),
     path('users/', views.GetUsersApiView.as_view(), name='users'),
+    path('totals/', views.GetTotalApiView.as_view(), name='totals'),
     path('meta/', views.get_membership_ids, name='meta'),
     path('meta/names/', views.get_members_names, name='meta_names'),
     path('get_password/', views.createpassword, name='password'),

@@ -1,12 +1,13 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from userauth.models import CustomUser
 from .models import Saving
 
 
 class SavingSerializer(serializers.ModelSerializer):
     # setting the user_id to the id of the currently logged in user.
     # This also fires when creating, not sure
-    user_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), default=serializers.CurrentUserDefault())
+    user_id = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), default=serializers.CurrentUserDefault())
 
     class Meta:
         model = Saving
