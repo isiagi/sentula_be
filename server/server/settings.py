@@ -129,15 +129,26 @@ env.read_env(env_file)
 #     }
 # }
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': env("DB_NAME"),
+#         'HOST': env("DB_HOST"),
+#         'PORT': env("DB_PORT"),
+#         'PASSWORD': env("DB_PASSWORD"),
+#         'USER': env("DB_USER"),
+#     }
+# }
+
+import dj_database_url
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': env("DB_NAME"),
-        'HOST': env("DB_HOST"),
-        'PORT': env("DB_PORT"),
-        'PASSWORD': env("DB_PASSWORD"),
-        'USER': env("DB_USER"),
-    }
+    'default': dj_database_url.config(
+        default=env("DATABASE_URL"),
+        conn_max_age=env("CONN_MAX_AGE", cast=int),
+        # ssl_require=env("SSL_REQUIRE", cast=bool),
+        conn_health_checks=env("CONN_HEALTH_CHECKS", cast=bool),
+    )
 }
 
 
