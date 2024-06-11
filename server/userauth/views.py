@@ -109,11 +109,18 @@ def signup(request):
     membership_id = request.data.get('username')
 
     # Valid ID
-    valid_id = f"ADA/{membership_id}/{datetime.now().year}"
+    valid_id = f"ADA/{membership_id}"
 
     # check serialization valid
     if serializer.is_valid():
         # save user data to database
+        try:
+            CustomUser.objects.get(username = valid_id)
+            return Response({"detail": 'Membership Id already exists'}, status=status.HTTP_400_BAD_REQUEST)
+        except CustomUser.DoesNotExist:
+            pass
+
+        # save user
         tst = serializer.save(username=valid_id, password="")
 
         # create profile with saved user

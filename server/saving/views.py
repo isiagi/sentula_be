@@ -31,22 +31,31 @@ class GetSavingApiView(ListCreateAPIView):
     def perform_create(self, serializer):
         user = self.request.user
 
+        # user
+        creating_user = serializer.validated_data['member_id']
+
+        print(creating_user)
+
         # check if it's the first entry of the month
         today = datetime.now()
         first_of_month = today.replace(day=1, hour=0, minute=0,second=0, microsecond=0)
 
-        if Saving.objects.filter(user_id=user, date_of_payment__month=today.month).count() == 0:
+        if Saving.objects.filter(member_id=creating_user, date_of_payment__month=today.month).count() == 0:
             serializer.validated_data['amount'] = int(serializer.validated_data['amount']) - 5000
 
             # Save the Saving object
             saving_instance = serializer.save(user_id=user)
 
+            cur = saving_instance.member_id
+
+            print('cul', cur)
+
             # Add 5000 to wagubumbuzi
-            wagubumbuzi_serializer = WagubumbuziSerializer(data={'user': user.id, 'amount': 5000})
+            wagubumbuzi_serializer = WagubumbuziSerializer(data={'user': cur, 'amount': 5000})
 
             if wagubumbuzi_serializer.is_valid():
                 print("hello")
-                wagubumbuzi_serializer.save(user=user)
+                wagubumbuzi_serializer.save(user=cur)
             else:
                 saving_instance.delete()
                 # wagubumbuzi_serializer.errors
