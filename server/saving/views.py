@@ -1,4 +1,5 @@
 from datetime import datetime
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from wagubumbuzi.serializers import WagubumbuziSerializer
 from wagubumbuzi.models import Wagubumbuzi 
@@ -13,19 +14,23 @@ from rest_framework.response import Response
 from django.db.models.functions import ExtractMonth, ExtractWeek, ExtractYear
 from django.db.models import Sum
 from django.db.models import Q
+from userauth.models import CustomUser
 
 # Create your views here.
 
 class GetSavingApiView(ListCreateAPIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     # queryset = Saving.objects.all()
     serializer_class = SavingSerializer
 
     # function to overide fetch
     def get_queryset(self):
-        return Saving.objects.filter(user_id=self.request.user.id)
+        user = self.request.user
+        if user.is_staff:
+            return Saving.objects.all()
+        return Saving.objects.filter(user_id=user.id)
     
     # function to overide create
     def perform_create(self, serializer):
@@ -34,7 +39,8 @@ class GetSavingApiView(ListCreateAPIView):
         # user
         creating_user = serializer.validated_data['member_id']
 
-        print(creating_user)
+        # Get user by membership_id
+        own_user = get_object_or_404(CustomUser, username=creating_user)
 
         # check if it's the first entry of the month
         today = datetime.now()
@@ -44,7 +50,7 @@ class GetSavingApiView(ListCreateAPIView):
             serializer.validated_data['amount'] = int(serializer.validated_data['amount']) - 5000
 
             # Save the Saving object
-            saving_instance = serializer.save(user_id=user)
+            saving_instance = serializer.save(user_id=own_user)
 
             cur = saving_instance.member_id
 
@@ -62,7 +68,7 @@ class GetSavingApiView(ListCreateAPIView):
                 raise serializer.ValidationError("Failed to create wagubumbuzi object.")
         else:
             # save the Saving Object
-            serializer.save(user_id=user)
+            serializer.save(user_id=own_user)
         
     
         

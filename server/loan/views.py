@@ -13,6 +13,7 @@ from django.contrib.auth.models import User
 from borrower.models import Borrower
 from django.shortcuts import get_object_or_404
 from userauth.models import CustomUser
+from .permissions import IsOwnerOrReadOnly
 # Create your views here.
 
 @api_view(['GET'])
@@ -24,10 +25,16 @@ def get_reference_no(request):
 
 class GetLoanApiView(ListCreateAPIView):
     authentication_classes = [TokenAuthentication, SessionAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     serializer_class = LoanSerializer
-    queryset = Loan.objects.all()
+    # queryset = Loan.objects.all()
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return Loan.objects.all()
+        return Loan.objects.filter(user=user.id)
 
     # Function to generate unique loan reference
     def generate_unique_identifier(self, length=5, id='hello'):
@@ -42,6 +49,11 @@ class GetLoanApiView(ListCreateAPIView):
 
         user_is_borrower = get_object_or_404(Borrower, membership_id=membership_id)
 
+        # Get user by membership_id
+        user = user_is_borrower.membership_id
+
+        print(user, 'user')
+
 
         # Generate unique code with this, self method / fx of class
         membership_id = serializer.validated_data.get('member_id')
@@ -51,7 +63,7 @@ class GetLoanApiView(ListCreateAPIView):
         amount = serializer.validated_data.get('amount')
 
         # Save loan object while setting reference_no and remaining_amount manually
-        serializer.save(reference_no=loan_reference, remaining_amount=amount)
+        serializer.save(user=user, reference_no=loan_reference, remaining_amount=amount)
         
 
 

@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = CustomUser
-        fields = ['id','username', 'email', 'first_name', 'last_name','password'] 
+        fields = ['id','username', 'email', 'first_name', 'last_name'] 
     
     def validate_username(self, value):
         # Custom validation logic for usernames in the format ADA/90826/2024

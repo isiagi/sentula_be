@@ -1,3 +1,4 @@
+from django.http import QueryDict
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from django.contrib.auth.models import User
 from rest_framework.response import Response
@@ -31,6 +32,7 @@ from loan.models import Loan
 from borrower.models import Borrower
 from payment.models import Payment
 from wagubumbuzi.models import Wagubumbuzi
+from rest_framework.permissions import AllowAny
 
 
 # Users 
@@ -64,6 +66,7 @@ class UserDeleteApi(DestroyAPIView):
 
 # Login View
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def login(request):
     # check if user exists or raise exception with 404
     user = get_object_or_404(CustomUser, username = request.data['Member_Id'])
@@ -92,9 +95,16 @@ def login(request):
 
 # Sign Up
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def signup(request):
+    membership_id = request.data.get('username')
+
+    if isinstance(request.data, QueryDict):
+        request.data._mutable = True
+
+    request.data.update({'username': f"ADA/{membership_id}"})
     # serializer user data
-    serializer = SignSerializer(data=request.data)
+    serializer = UserSerializer(data=request.data)
 
     # Generate membership identifier
     def generate_unique_identifier(length=5):
@@ -108,20 +118,20 @@ def signup(request):
     # Get username from request data
     membership_id = request.data.get('username')
 
-    # Valid ID
-    valid_id = f"ADA/{membership_id}"
+    # # Valid ID
+    # valid_id = f"ADA/{membership_id}"
 
     # check serialization valid
     if serializer.is_valid():
         # save user data to database
         try:
-            CustomUser.objects.get(username = valid_id)
+            CustomUser.objects.get(username = membership_id)
             return Response({"detail": 'Membership Id already exists'}, status=status.HTTP_400_BAD_REQUEST)
         except CustomUser.DoesNotExist:
             pass
 
         # save user
-        tst = serializer.save(username=valid_id, password="")
+        tst = serializer.save(username=membership_id, password="")
 
         # create profile with saved user
         UserProfile.objects.create(user=tst)
@@ -145,17 +155,24 @@ def signup(request):
     return Response({"Error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def check_member(request):
     serializer = MemberSerializer(data=request.data)
 
     if serializer.is_valid():
-        user = CustomUser.objects.get(username = request.data['membership_id'], password = "")
+        try:
+            user = CustomUser.objects.get(username = request.data['membership_id'])
+            
+            if user.has_usable_password():
 
-        if not user or user == None:
+                return Response({"Error": 'User has a password set'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        except CustomUser.DoesNotExist:
             return Response({"Error": 'Membership Id not found'}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-           # Response if everything Okay
-            return Response({'message': "User Found",  "User": serializer.data}, status=status.HTTP_200_OK) 
+        
+        
+        # Response if everything Okay
+        return Response({'message': "User Found",  "User": serializer.data}, status=status.HTTP_200_OK) 
         
     else:
         # Throw error if serialization of data fails
@@ -190,12 +207,18 @@ def get_members_names(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def createpassword(request):
     serializer = PasswordSerializer(data=request.data)
 
+    print(request.data['membership'])
+
     if serializer.is_valid():
-        # check for user in DB and hash password.
-        user = CustomUser.objects.get(username = request.data['membership'])
+        try:
+            # check for user in DB and hash password.
+            user = CustomUser.objects.get(username = request.data['membership'])
+        except CustomUser.DoesNotExist:
+            return Response({"Error": 'Membership Id not found'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Hash and Set Password
         user.set_password(request.data['password'])

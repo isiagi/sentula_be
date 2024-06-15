@@ -8,12 +8,12 @@ import re
 from django.contrib.auth.models import BaseUserManager
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, username, email=None, password=None, **extra_fields):
+    def create_user(self, username, email=None,  **extra_fields):
         if not username:
             raise ValueError('The Username field must be set')
         email = self.normalize_email(email)
         user = self.model(username=username, email=email, **extra_fields)
-        user.set_password(password)
+        user.set_unusable_password()
         user.save(using=self._db)
         return user
 
@@ -33,6 +33,6 @@ class CustomUser(AbstractUser):
         help_text='Required. 150 characters or fewer. Letters, digits, and spaces only.',
         validators=[],
         error_messages={
-            'unique': "A user with that username already exists.",
+            'unique': "A Member with that Membership ID already exists.",
         },
     )
