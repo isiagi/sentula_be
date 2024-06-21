@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-7279xm&pj_!(x)@e079-^nh*=)mxx3#a!66$_d_y$k5k_@60f=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['10.0.2.2', '127.0.0.1', 'agalyawamm-backend.onrender.com']
+ALLOWED_HOSTS = ['10.0.2.2', '127.0.0.1', 'agalyawamm-backend.onrender.com', 'ada-backend-6cir.onrender.com']
 
 
 # Application definition
@@ -70,9 +70,9 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
-    # 'DEFAULT_PERMISSION_CLASSES': [
-    #     'rest_framework.permissions.IsAuthenticated',
-    # ]
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
 }
 
 CORS_ALLOW_ALL_ORIGINS = True    #Allow all origins
@@ -150,7 +150,6 @@ DATABASES = {
         conn_health_checks=env("CONN_HEALTH_CHECKS", cast=bool),
     )
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

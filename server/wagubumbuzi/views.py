@@ -11,7 +11,13 @@ class WagubumbuziApiView(ListAPIView):
 
 
     serializer_class = WagubumbuziSerializer
-    queryset = Wagubumbuzi.objects.all()
+    # queryset = Wagubumbuzi.objects.all()
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return Wagubumbuzi.objects.all()
+        return Wagubumbuzi.objects.filter(user=user)
 
 class WagubumbuziDeleteApiView(DestroyAPIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]

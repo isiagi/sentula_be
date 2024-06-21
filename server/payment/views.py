@@ -8,6 +8,12 @@ class PaymentApiView(ListCreateAPIView):
     serializer_class = PaymentSerializer
     queryset = Payment.objects.all()
 
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return Payment.objects.all()
+        return Payment.objects.filter(user=user)
+
     # overide create operation
     def perform_create(self, serializer):
         # user = self.request.user
@@ -20,6 +26,14 @@ class PaymentApiView(ListCreateAPIView):
         # This is done to gain access to the foreign key object, Loan with
         # the same reference_no has passed, and can be modified.
         loan = payment.reference
+
+        # Get loan user
+        user = loan.user
+
+        # print(user, 'user')
+        payment.user = user
+
+        payment.save()
 
         # Modify the remaining_amount of foreign key object 
         loan.remaining_amount = float(loan.remaining_amount) - float(payment.amount)

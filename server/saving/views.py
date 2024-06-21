@@ -122,27 +122,49 @@ class GetSavingByWeekApiView(ListAPIView):
         month = self.kwargs.get('month')
         year = self.kwargs.get('year')
 
-        # Get the data from the database
-        data = Saving.objects.annotate(
-            # Extract the year, month, and week from the date_of_payment
-            year=ExtractYear('date_of_payment'),
-            month=ExtractMonth('date_of_payment'),
-            week=ExtractWeek('date_of_payment')
-    
-        ).filter(
-            # Filter the data by year and month
-            date_of_payment__year=year,
-            date_of_payment__month=month
-        ).values(
-            # Group the data by year, month, and week
-            'year', 'month', 'week' 
-        ).annotate(
-            # Sum the amount of each group
-            count=Sum('amount')
-        ).order_by(
-            # Order in order below while returning
-            'year', 'month', 'week'
-        )
+        # Check if the user is an admin
+        if self.request.user.is_staff:
+            # Admin users can see all savings
+            data = Saving.objects.annotate(
+                # Extract the year, month, and week from the date_of_payment
+                year=ExtractYear('date_of_payment'),
+                month=ExtractMonth('date_of_payment'),
+                week=ExtractWeek('date_of_payment')
+            ).filter(
+                # Filter the data by year and month
+                date_of_payment__year=year,
+                date_of_payment__month=month
+            ).values(
+                # Group the data by year, month, and week
+                'year', 'month', 'week' 
+            ).annotate(
+                # Sum the amount of each group
+                count=Sum('amount')
+            ).order_by(
+                # Order in order below while returning
+                'year', 'month', 'week'
+            )
+        else:
+            # Regular users can only see their own savings
+            data = Saving.objects.filter(user_id=self.request.user).annotate(
+                # Extract the year, month, and week from the date_of_payment
+                year=ExtractYear('date_of_payment'),
+                month=ExtractMonth('date_of_payment'),
+                week=ExtractWeek('date_of_payment')
+            ).filter(
+                # Filter the data by year and month
+                date_of_payment__year=year,
+                date_of_payment__month=month
+            ).values(
+                # Group the data by year, month, and week
+                'year', 'month', 'week' 
+            ).annotate(
+                # Sum the amount of each group
+                count=Sum('amount')
+            ).order_by(
+                # Order in order below while returning
+                'year', 'month', 'week'
+            )
 
         return data
     

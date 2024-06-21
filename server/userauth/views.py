@@ -33,6 +33,8 @@ from borrower.models import Borrower
 from payment.models import Payment
 from wagubumbuzi.models import Wagubumbuzi
 from rest_framework.permissions import AllowAny
+import string
+
 
 
 # Users 
@@ -170,13 +172,50 @@ def check_member(request):
         except CustomUser.DoesNotExist:
             return Response({"Error": 'Membership Id not found'}, status=status.HTTP_400_BAD_REQUEST)
         
+
+        if not user.email:
+            return Response({"Error": "User has n email"})
+        
+        def generate_unique_identifier(length=5):
+            characters = string.digits
+            identifier =''.join(random.choices(characters, k=length))
+
+            return identifier
+        
+        gen_otp = generate_unique_identifier()
+
+        send('OTP', f"Your OTP is {gen_otp}", [user.email])
+
+        user.otp = gen_otp
+
+        user.save()
         
         # Response if everything Okay
-        return Response({'message': "User Found",  "User": serializer.data}, status=status.HTTP_200_OK) 
+        return Response({'message': "User Found & Check email for OTP",  "User": serializer.data}, status=status.HTTP_200_OK) 
+
         
     else:
         # Throw error if serialization of data fails
         return Response({"Error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def validate_otp(request):
+    otp = request.data['otp']
+    membership_id = request.data['membership_id']
+
+    try:
+        user = CustomUser.objects.get(username=membership_id)
+    except CustomUser.DoesNotExist:
+        return Response({"Error": 'Membership Id not found'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if user.otp == otp:
+        user.otp = None
+        user.save()
+        return Response({'Detail': "OTP successfully verified"}, status=status.HTTP_200_OK)
+    
+    return Response({'Detail': "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST)
     
 
 @api_view(['GET'])

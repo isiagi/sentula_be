@@ -36,3 +36,5 @@ class CustomUser(AbstractUser):
             'unique': "A Member with that Membership ID already exists.",
         },
     )
+
+    otp = models.CharField(max_length=150, null=True, blank=True)
