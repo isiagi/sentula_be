@@ -57,7 +57,7 @@ class GetSavingApiView(ListCreateAPIView):
             print('cul', cur)
 
             # Add 5000 to wagubumbuzi
-            wagubumbuzi_serializer = WagubumbuziSerializer(data={'user': cur, 'amount': 5000})
+            wagubumbuzi_serializer = WagubumbuziSerializer(data={'user': cur, 'amount': 5000, 'saving_id': saving_instance})
 
             if wagubumbuzi_serializer.is_valid():
                 print("hello")

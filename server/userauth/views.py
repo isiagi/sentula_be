@@ -55,8 +55,8 @@ class GetUsersApiView(ListAPIView):
     def get_queryset(self):
         User = get_user_model()
         user = CustomUser.objects.all()
-
-        return CustomUser.objects.values()
+        # return object.is_staff not true
+        return CustomUser.objects.filter(is_staff=False).values()
     
 class UserDetailApiView(RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
