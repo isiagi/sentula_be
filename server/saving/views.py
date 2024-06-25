@@ -13,7 +13,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.db.models.functions import ExtractMonth, ExtractWeek, ExtractYear
 from django.db.models import Sum
-from django.db.models import Q
+from django.db.models import Min
 from userauth.models import CustomUser
 
 # Create your views here.
@@ -46,7 +46,19 @@ class GetSavingApiView(ListCreateAPIView):
         today = datetime.now()
         first_of_month = today.replace(day=1, hour=0, minute=0,second=0, microsecond=0)
 
-        if Saving.objects.filter(member_id=creating_user, date_of_payment__month=today.month).count() == 0:
+        # Extracting the date_of_payment date
+        date_of_payment = serializer.validated_data['date_of_payment']
+        current_month = date_of_payment.month
+        current_year = date_of_payment.year
+
+        # Find the earliest date_of_payment date of the same month and year
+        min_date = Saving.objects.filter(
+            date_of_payment__month=current_month,
+            date_of_payment__year=current_year
+        ).aggregate(Min('date_of_payment'))['date_of_payment__min']
+
+        if min_date is None or date_of_payment == min_date:
+
             serializer.validated_data['amount'] = int(serializer.validated_data['amount']) - 5000
 
             # Save the Saving object
@@ -57,7 +69,9 @@ class GetSavingApiView(ListCreateAPIView):
             print('cul', cur)
 
             # Add 5000 to wagubumbuzi
-            wagubumbuzi_serializer = WagubumbuziSerializer(data={'user': cur, 'amount': 5000, 'saving_id': saving_instance})
+
+            wagubumbuzi_serializer = WagubumbuziSerializer(data={'user': cur, 'amount': 5000, 'saving_id': saving_instance, 'date_created': date_of_payment})
+
 
             if wagubumbuzi_serializer.is_valid():
                 print("hello")
