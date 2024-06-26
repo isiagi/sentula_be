@@ -53,6 +53,9 @@ class GetSavingApiView(ListCreateAPIView):
 
         # Find the earliest date_of_payment date of the same month and year
         min_date = Saving.objects.filter(
+
+            member_id=creating_user,
+
             date_of_payment__month=current_month,
             date_of_payment__year=current_year
         ).aggregate(Min('date_of_payment'))['date_of_payment__min']
