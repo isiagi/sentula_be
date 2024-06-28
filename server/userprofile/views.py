@@ -53,6 +53,7 @@ class UserProfileDetailApiView(RetrieveUpdateDestroyAPIView):
         user.last_name = self.request.data.get('last_name')
         user.first_name = self.request.data.get('first_name')
         user.email = self.request.data.get('email')
+        user.is_staff = self.request.data['is_staff']
        
         
         # Save user model
