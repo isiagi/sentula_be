@@ -15,6 +15,8 @@ from django.db.models.functions import ExtractMonth, ExtractWeek, ExtractYear
 from django.db.models import Sum
 from django.db.models import Min
 from userauth.models import CustomUser
+from django_filters.rest_framework import DjangoFilterBackend
+
 
 # Create your views here.
 
@@ -24,6 +26,9 @@ class GetSavingApiView(ListCreateAPIView):
 
     # queryset = Saving.objects.all()
     serializer_class = SavingSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['member_id', 'date_of_payment', 'member_name']
+
 
     # function to overide fetch
     def get_queryset(self):

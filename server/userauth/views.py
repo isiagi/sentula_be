@@ -56,7 +56,7 @@ class GetUsersApiView(ListAPIView):
         User = get_user_model()
         user = CustomUser.objects.all()
         # return object.is_staff not true
-        return CustomUser.objects.filter(is_staff=False).values()
+        return CustomUser.objects.filter().values()
     
 class UserDetailApiView(RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer

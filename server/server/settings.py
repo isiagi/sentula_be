@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "corsheaders",
     'rest_framework',
+    'django_filters',
     'drf_extra_fields',
     'rest_framework.authtoken',
     'userauth',
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
     'payment',
     'userprofile',
     'borrower',
+    'pdfs',
 ]
 
 AUTH_USER_MODEL = 'userauth.CustomUser'
@@ -70,13 +72,14 @@ MIDDLEWARE = [
 
 
 REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend',],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
-    ]
+    ],
 }
 
 CORS_ALLOW_ALL_ORIGINS = True    #Allow all origins

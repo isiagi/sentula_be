@@ -26,6 +26,7 @@ from payment import urls as payment_urls
 from django.conf import settings
 from userprofile import urls as profile_urls
 from borrower import urls as borrower_urls
+from pdfs import urls as pdfs_urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -36,4 +37,5 @@ urlpatterns = [
     path('api/wagubumbuzi/', include(wagubumbuzi_urls)),
     path('api/user_profile/', include(profile_urls)),
     path('api/borrower/', include(borrower_urls)),
+    path('api/pdfs/', include(pdfs_urls)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT,)
