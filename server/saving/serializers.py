@@ -11,7 +11,16 @@ class SavingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Saving
-        fields = ['id','member_id', 'member_name', 'account_number', 'amount', 'date_of_payment', 'user_id', 'created_at', 'updated_at']
+        fields = ['id','member_id', 'account_number', 'amount', 'date_of_payment', 'user_id', 'created_at', 'updated_at']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Check if it's a GET request
+        if self.context['request'].method == 'GET':
+            self.Meta.depth = 1
+        else:
+            self.Meta.depth = 0  # Set depth to 0 for non-GET requests
 
 class SavingDataSerializer(serializers.Serializer):
     year = serializers.IntegerField()

@@ -27,7 +27,7 @@ class GetSavingApiView(ListCreateAPIView):
     # queryset = Saving.objects.all()
     serializer_class = SavingSerializer
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['member_id', 'date_of_payment', 'member_name']
+    filterset_fields = ['member_id', 'date_of_payment', ]
 
 
     # function to overide fetch
@@ -67,27 +67,33 @@ class GetSavingApiView(ListCreateAPIView):
 
         if min_date is None or date_of_payment == min_date:
 
-            serializer.validated_data['amount'] = int(serializer.validated_data['amount']) - 5000
+                # Check if it's the first entry of the day
+            if Saving.objects.filter(member_id=creating_user, date_of_payment=date_of_payment).count() == 0:
 
-            # Save the Saving object
-            saving_instance = serializer.save(user_id=own_user)
+                serializer.validated_data['amount'] = int(serializer.validated_data['amount']) - 5000
 
-            cur = saving_instance.member_id
+                # Save the Saving object
+                saving_instance = serializer.save(user_id=own_user)
 
-            print('cul', cur)
+                cur = saving_instance.member_id
 
-            # Add 5000 to wagubumbuzi
+                print('cul', cur)
 
-            wagubumbuzi_serializer = WagubumbuziSerializer(data={'user': cur, 'amount': 5000, 'saving_id': saving_instance, 'date_created': date_of_payment})
+                # Add 5000 to wagubumbuzi
+
+                wagubumbuzi_serializer = WagubumbuziSerializer(data={'user': cur, 'amount': 5000, 'saving_id': saving_instance, 'date_created': date_of_payment})
 
 
-            if wagubumbuzi_serializer.is_valid():
-                print("hello")
-                wagubumbuzi_serializer.save(user=cur)
+                if wagubumbuzi_serializer.is_valid():
+                    print("hello")
+                    wagubumbuzi_serializer.save(user=cur)
+                else:
+                    saving_instance.delete()
+                    # wagubumbuzi_serializer.errors
+                    raise serializer.ValidationError("Failed to create wagubumbuzi object.")
+            
             else:
-                saving_instance.delete()
-                # wagubumbuzi_serializer.errors
-                raise serializer.ValidationError("Failed to create wagubumbuzi object.")
+                serializer.save(user_id=own_user)
         else:
             # save the Saving Object
             serializer.save(user_id=own_user)
