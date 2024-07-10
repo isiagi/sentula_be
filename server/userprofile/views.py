@@ -53,7 +53,11 @@ class UserProfileDetailApiView(RetrieveUpdateDestroyAPIView):
         user.last_name = self.request.data.get('last_name')
         user.first_name = self.request.data.get('first_name')
         user.email = self.request.data.get('email')
-        user.is_staff = self.request.data['is_staff']
+        
+        # Set is_staff only if the user is an admin
+        
+        if self.request.user.is_staff:  # Assuming the current user is the admin
+            user.is_staff = self.request.data.get('is_staff', user.is_staff)
        
         
         # Save user model

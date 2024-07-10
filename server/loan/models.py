@@ -4,7 +4,7 @@ from userauth.models import CustomUser
 
 # Create your models here.
 class Loan(models.Model):
-    member_name = models.CharField(max_length=100)
+    # member_name = models.CharField(max_length=100)
     member_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE,to_field="username", blank=True, null=True, related_name="member") # membership_id of user model
     type = models.CharField(max_length=100)
     plan = models.CharField(max_length=100)

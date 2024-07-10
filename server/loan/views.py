@@ -1,7 +1,7 @@
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
-from .serializers import LoanSerializer, LoanTotalSerializer, LoanActiveSerializer
+from .serializers import LoanSerializer, LoanTotalSerializer, LoanActiveSerializer, LoanDepthSerializer
 from .models import Loan
 import random
 import string
@@ -14,6 +14,7 @@ from borrower.models import Borrower
 from django.shortcuts import get_object_or_404
 from userauth.models import CustomUser
 from .permissions import IsOwnerOrReadOnly
+from django_filters.rest_framework import DjangoFilterBackend
 # Create your views here.
 
 @api_view(['GET'])
@@ -29,6 +30,13 @@ class GetLoanApiView(ListCreateAPIView):
 
     serializer_class = LoanSerializer
     # queryset = Loan.objects.all()
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['member_id']
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return LoanDepthSerializer
+        return LoanSerializer
 
     def get_queryset(self):
         user = self.request.user

@@ -15,6 +15,7 @@ class UserProfile(models.Model):
     telephone = models.CharField(max_length=100, null=True, blank=True)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, blank=True, null=True)
     image_url = models.ImageField(upload_to=upload_to, blank=True, null=True)
+    nin = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 

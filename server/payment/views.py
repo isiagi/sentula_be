@@ -1,6 +1,7 @@
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from .serializers import PaymentSerializer
 from .models import Payment
+from rest_framework.exceptions import ValidationError
 
 # Create your views here.
 
@@ -20,7 +21,7 @@ class PaymentApiView(ListCreateAPIView):
 
         # Save payment object, then used to access the foreign key obj, Loan obj
         # instance  with passed reference number.
-        payment = serializer.save()
+        payment = serializer.save(penality=0)
 
         # Access the payment key with foreign key value
         # This is done to gain access to the foreign key object, Loan with
@@ -45,6 +46,16 @@ class PaymentApiView(ListCreateAPIView):
 class PaymentDetailApiView(RetrieveUpdateDestroyAPIView):
     serializer_class = PaymentSerializer
     queryset = Payment.objects.all()
+
+    def perform_update(self, serializer):
+        penality = serializer.validated_data.get('penality')
+
+        if penality is not None:
+            serializer.instance.penality = penality
+
+            serializer.instance.save()
+        else:
+            raise ValidationError('penality is required')
 
     # Function to overide delete, this called when delete is fired.
     def perform_destroy(self, instance):
