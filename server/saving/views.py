@@ -16,6 +16,7 @@ from django.db.models import Sum
 from django.db.models import Min
 from userauth.models import CustomUser
 from django_filters.rest_framework import DjangoFilterBackend
+import datetime
 
 
 # Create your views here.
@@ -48,8 +49,8 @@ class GetSavingApiView(ListCreateAPIView):
         own_user = get_object_or_404(CustomUser, username=creating_user)
 
         # check if it's the first entry of the month
-        today = datetime.now()
-        first_of_month = today.replace(day=1, hour=0, minute=0,second=0, microsecond=0)
+        #today = datetime.now()
+        #first_of_month = today.replace(day=1, hour=0, minute=0,second=0, microsecond=0)
 
         # Extracting the date_of_payment date
         date_of_payment = serializer.validated_data['date_of_payment']
@@ -146,9 +147,8 @@ class GetSavingByWeekApiView(ListAPIView):
     serializer_class = SavingDataSerializer
 
     def get_queryset(self):
-        # Get the year and month from the URL
-        month = self.kwargs.get('month')
-        year = self.kwargs.get('year')
+       # Get the current year
+        current_year = datetime.datetime.now().year
 
         # Check if the user is an admin
         if self.request.user.is_staff:
@@ -157,41 +157,39 @@ class GetSavingByWeekApiView(ListAPIView):
                 # Extract the year, month, and week from the date_of_payment
                 year=ExtractYear('date_of_payment'),
                 month=ExtractMonth('date_of_payment'),
-                week=ExtractWeek('date_of_payment')
+                
             ).filter(
                 # Filter the data by year and month
-                date_of_payment__year=year,
-                date_of_payment__month=month
+                date_of_payment__year=current_year,
+                
             ).values(
                 # Group the data by year, month, and week
-                'year', 'month', 'week' 
+                'year', 'month'
             ).annotate(
                 # Sum the amount of each group
-                count=Sum('amount')
+                total_amount=Sum('amount')
             ).order_by(
                 # Order in order below while returning
-                'year', 'month', 'week'
+                'year', 'month'
             )
         else:
             # Regular users can only see their own savings
             data = Saving.objects.filter(user_id=self.request.user).annotate(
                 # Extract the year, month, and week from the date_of_payment
                 year=ExtractYear('date_of_payment'),
-                month=ExtractMonth('date_of_payment'),
-                week=ExtractWeek('date_of_payment')
+                month=ExtractMonth('date_of_payment')
             ).filter(
                 # Filter the data by year and month
-                date_of_payment__year=year,
-                date_of_payment__month=month
+                date_of_payment__year=current_year
             ).values(
                 # Group the data by year, month, and week
-                'year', 'month', 'week' 
+                'year', 'month' 
             ).annotate(
                 # Sum the amount of each group
-                count=Sum('amount')
+                total_amount=Sum('amount')
             ).order_by(
                 # Order in order below while returning
-                'year', 'month', 'week'
+                'year', 'month'
             )
 
         return data

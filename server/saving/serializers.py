@@ -25,8 +25,7 @@ class SavingSerializer(serializers.ModelSerializer):
 class SavingDataSerializer(serializers.Serializer):
     year = serializers.IntegerField()
     month = serializers.IntegerField()
-    week = serializers.IntegerField()
-    count = serializers.IntegerField()
+    total_amount = serializers.IntegerField()
 
 
 class SavingTotalSerializer(serializers.Serializer):
