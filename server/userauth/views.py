@@ -165,7 +165,7 @@ def check_member(request):
         try:
             user = CustomUser.objects.get(username = request.data['membership_id'])
             
-            if user.has_usable_password():
+            if request.data['routeName'] == "register" and user.has_usable_password():
 
                 return Response({"Error": 'User has a password set'}, status=status.HTTP_400_BAD_REQUEST)
             

@@ -48,9 +48,10 @@ class EmailSerializer(serializers.Serializer):
 
 class MemberSerializer(serializers.Serializer):
     membership_id = serializers.CharField()
+    routeName = serializers.CharField()
 
     class Meta:
-        fields = ['membership_id ']
+        fields = ['membership_id ', 'routeName']
 
 
 class PasswordSerializer(serializers.Serializer):
