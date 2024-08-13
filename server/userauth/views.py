@@ -34,6 +34,7 @@ from payment.models import Payment
 from wagubumbuzi.models import Wagubumbuzi
 from rest_framework.permissions import AllowAny
 import string
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 
@@ -51,6 +52,9 @@ import string
 
 class GetUsersApiView(ListAPIView):
     serializer_class = UserSerializer
+
+    filter_backends = [DjangoFilterBackend,]
+    filterset_fields = ['username',]
 
     def get_queryset(self):
         User = get_user_model()

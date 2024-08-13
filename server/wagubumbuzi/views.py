@@ -3,11 +3,16 @@ from .models import Wagubumbuzi
 from .serializers import WagubumbuziSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from .filters import WagubumbuziFilter
+from django_filters.rest_framework import DjangoFilterBackend
 
 # Create your views here.
 class WagubumbuziApiView(ListAPIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
+
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = WagubumbuziFilter
 
 
     serializer_class = WagubumbuziSerializer

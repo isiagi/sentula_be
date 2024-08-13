@@ -4,11 +4,15 @@ from rest_framework.decorators import APIView, permission_classes
 from .create_pdf import create_pdf
 from rest_framework.permissions import AllowAny
 from .model_mapping import MODEL_MAPPING
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 
 # Create your views here.
 
 @permission_classes([AllowAny])
 class Get_Pdf(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, route):
 
@@ -25,12 +29,18 @@ class Get_Pdf(APIView):
 
         # pick route from url
         # route = request.GET.get('route')
-        user = request.GET.get('user')
+        user = request.user
+
+        print(user, 'user')
         model_class = MODEL_MAPPING.get(route.lower())  # Get model class from route
         if not model_class:
             return HttpResponse(f"Invalid route parameter: {route}", status=400)
 
         buffer = create_pdf(model_class, user)
+
+        if not buffer:
+            # Handle empty data
+            return HttpResponse("No data found", status=404)
 
         buffer.seek(0)
 
