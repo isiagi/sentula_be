@@ -2,7 +2,7 @@ from django.http import QueryDict
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from django.contrib.auth.models import User
 from rest_framework.response import Response
-from .serializers import UserSerializer, EmailSerializer, ResetPasswordSerializer, PasswordSerializer, MemberSerializer, SignSerializer
+from .serializers import UserSerializer, EmailSerializer, ResetPasswordSerializer, PasswordSerializer, MemberSerializer, SignSerializer, EmailSendSerializer
 from django.shortcuts import get_object_or_404
 from rest_framework.authtoken.models import Token
 
@@ -16,7 +16,7 @@ from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
-from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView, DestroyAPIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView, DestroyAPIView, ListCreateAPIView
 
 from .email_service import send
 from userprofile.models import UserProfile
@@ -34,6 +34,7 @@ from payment.models import Payment
 from wagubumbuzi.models import Wagubumbuzi
 from rest_framework.permissions import AllowAny
 import string
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 
@@ -49,8 +50,43 @@ import string
 
 #     return Response({"users": all_users}, status=status.HTTP_200_OK)
 
+class SendEmailApiView(ListCreateAPIView):
+    serializer_class = EmailSendSerializer
+    queryset = CustomUser.objects.all()
+
+    permission_classes = [AllowAny]
+
+    # pick title, subject, message from request
+    def create(self, request, *args, **kwargs):
+        # Get all emails from database
+        emails = CustomUser.objects.all().values('email')
+
+        # print(emails)
+        # make a list of emails
+        email_list = []
+        for email in emails:
+            # skip empty strings from list
+            if not email['email']:
+                continue
+
+            email_list.append(email['email'])
+
+        print(email_list)
+
+        # title = request.data['title']
+        print(request.data)
+        subject = request.data['subject']
+        message = request.data['message']
+
+        send(subject, message, email_list)
+
+        return Response({"message": "Email sent successfully"}, status = status.HTTP_201_CREATED)
+
 class GetUsersApiView(ListAPIView):
     serializer_class = UserSerializer
+
+    filter_backends = [DjangoFilterBackend,]
+    filterset_fields = ['username',]
 
     def get_queryset(self):
         User = get_user_model()

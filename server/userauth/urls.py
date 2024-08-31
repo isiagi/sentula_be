@@ -16,4 +16,5 @@ urlpatterns = [
     path('reset_password/<str:encoded_pk>/<str:token>/', views.reset_password, name='reset_password'),
     path('validate_otp/', views.validate_otp, name='validate_otp'),
     path('delete_password/', views.deletepassword, name='delete_password'),
+    path('contact_members/', views.SendEmailApiView.as_view(), name='contact_members'),
 ]

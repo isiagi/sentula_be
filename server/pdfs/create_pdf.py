@@ -6,20 +6,28 @@ from io import BytesIO
 from reportlab.lib.styles import getSampleStyleSheet
 from datetime import datetime
 
-def create_pdf(model_class, user_id):
+def create_pdf(model_class, user):
     # Retrieve data from the appropriate model
-    data = model_class.objects.all()
+    # if user is not staff get all data else get per user
+    if user.is_staff:
+        data = model_class.objects.all()
+    else:
+        data = model_class.objects.filter(user=user)
+
+    # handle empty data
+    if not data:
+        return None
     
     # Get all the fields of the model
     model_fields = model_class._meta.fields
     
     # Extract field names for table header
-    table_header = [field.verbose_name.title() for field in model_fields if field.name not in ['id', 'user', 'user_id', 'account_number', 'saving_id', 'created_at', 'updated_at', 'image_url']]
+    table_header = [field.verbose_name.title() for field in model_fields if field.name not in ['id', 'user', 'user_id', 'account_number', 'saving_id', 'updated_at', 'image_url', 'password', 'otp', 'last_login', 'is_superuser', 'is_active','is_staff']]
 
     # Extract data rows for the table
     table_data = []
     for item in data:
-        row = [getattr(item, field.name) for field in model_fields if field.name not in ['id', 'user', 'user_id', 'account_number', 'saving_id', 'created_at', 'updated_at', 'image_url']]
+        row = [getattr(item, field.name) for field in model_fields if field.name not in ['id', 'user', 'user_id', 'account_number', 'saving_id', 'updated_at', 'image_url', 'password', 'otp', 'last_login', 'is_superuser', 'is_active', 'is_staff']]
         table_data.append(row)
 
     # Create a BytesIO buffer to receive the PDF data

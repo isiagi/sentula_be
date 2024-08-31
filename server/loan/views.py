@@ -15,6 +15,8 @@ from django.shortcuts import get_object_or_404
 from userauth.models import CustomUser
 from .permissions import IsOwnerOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
+from wagubumbuzi.models import Wagubumbuzi
+from rest_framework import filters
 # Create your views here.
 
 @api_view(['GET'])
@@ -30,8 +32,10 @@ class GetLoanApiView(ListCreateAPIView):
 
     serializer_class = LoanSerializer
     # queryset = Loan.objects.all()
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['member_id']
+    ordering_fields = ['created_at']
+    ordering = ['-created_at']
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -105,6 +109,7 @@ class GetActiveLoanApiView(ListAPIView):
     def list(self, request, *args, **kwargs):
         queryset = Loan.objects.all()
         savingset = Saving.objects.aggregate(total_saving = Sum('amount'))
+        wagumbuzi = Wagubumbuzi.objects.aggregate(total_Wagubumbuzi = Sum('amount'))
         total_loan = queryset.aggregate(total_laon = Sum('amount'))
         total_remaining_amount = queryset.filter(remaining_amount__gt=0).aggregate(total_remaining_amount = Sum('remaining_amount'))
         count = queryset.filter(remaining_amount__gt=0).count()
@@ -115,7 +120,8 @@ class GetActiveLoanApiView(ListAPIView):
             'total_remaining_amount': total_remaining_amount['total_remaining_amount'],
             'loan_count': count,
             'total_saving': savingset['total_saving'],
-            'total_users': user_count
+            'total_users': user_count,
+            'total_wagubumbuzi': wagumbuzi['total_Wagubumbuzi']
         }
 
         return Response(data)

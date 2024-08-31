@@ -17,6 +17,7 @@ from django.db.models import Min
 from userauth.models import CustomUser
 from django_filters.rest_framework import DjangoFilterBackend
 import datetime
+from rest_framework import filters
 
 
 # Create your views here.
@@ -27,8 +28,10 @@ class GetSavingApiView(ListCreateAPIView):
 
     # queryset = Saving.objects.all()
     serializer_class = SavingSerializer
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['member_id', 'date_of_payment', ]
+    ordering_fields = ['date_of_payment']
+    ordering = ['-date_of_payment']
 
 
     # function to overide fetch

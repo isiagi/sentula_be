@@ -106,3 +106,12 @@ class ResetPasswordSerializer(serializers.Serializer):
 
         # Return serializer data.
         return data
+    
+
+class EmailSendSerializer(serializers.Serializer):
+    title= serializers.CharField()
+    subject= serializers.CharField()
+    message= serializers.CharField()
+
+    class Meta:
+        fields = ['title', 'subject', 'message']
