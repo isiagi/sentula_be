@@ -274,6 +274,23 @@ def createpassword(request):
     else:
         # Throw error if serialization of data fails
         return Response({"Error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    
+# Delete password
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def deletepassword(request):
+    # Set the password to an unusable value
+    request.user.set_unusable_password()
+
+    # Check if the password is now unusable
+    if request.user.has_usable_password():
+        return Response({"message": "User Password Not Deleted"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Save the user object to update the database
+    request.user.save()
+
+    # Response
+    return Response({"message": "User Password Deleted"}, status=status.HTTP_200_OK)
 
 # Logout
 @api_view(['POST'])
