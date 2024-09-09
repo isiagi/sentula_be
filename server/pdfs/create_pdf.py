@@ -5,6 +5,16 @@ from reportlab.lib.units import inch
 from io import BytesIO
 from reportlab.lib.styles import getSampleStyleSheet
 from datetime import datetime
+from saving.models import Saving
+
+def format_currency(value):
+    """ Format a number as UGX currency. """
+    try:
+        # Format value with thousand separators and append 'UGX'
+        return f"UGX {value:,.0f}"  # Example: UGX 1,234,567
+    except Exception as e:
+        return value  # If there's an error, return the value as is
+
 
 def create_pdf(model_class, user):
     # Retrieve data from the appropriate model
@@ -12,7 +22,10 @@ def create_pdf(model_class, user):
     if user.is_staff:
         data = model_class.objects.all()
     else:
-        data = model_class.objects.filter(user=user)
+        if model_class == Saving:
+            data = model_class.objects.filter(user_id=user)
+        else:
+            data = model_class.objects.filter(user=user)
 
     # handle empty data
     if not data:
@@ -24,10 +37,20 @@ def create_pdf(model_class, user):
     # Extract field names for table header
     table_header = [field.verbose_name.title() for field in model_fields if field.name not in ['id', 'user', 'user_id', 'account_number', 'saving_id', 'updated_at', 'image_url', 'password', 'otp', 'last_login', 'is_superuser', 'is_active','is_staff']]
 
-    # Extract data rows for the table
+    # Extract data rows for the table and calculate total for the "amount" field
+    total_amount = 0
     table_data = []
     for item in data:
-        row = [getattr(item, field.name) for field in model_fields if field.name not in ['id', 'user', 'user_id', 'account_number', 'saving_id', 'updated_at', 'image_url', 'password', 'otp', 'last_login', 'is_superuser', 'is_active', 'is_staff']]
+        row = []
+        for field in model_fields:
+            if field.name not in ['id', 'user', 'user_id', 'account_number', 'saving_id', 'updated_at', 'image_url', 'password', 'otp', 'last_login', 'is_superuser', 'is_active', 'is_staff']:
+                value = getattr(item, field.name)
+                # If the field is "amount", add it to the total
+                if field.name == 'amount' and value:
+                    total_amount += value
+                    # Format the amount as currency
+                    value = format_currency(value)
+                row.append(value)
         table_data.append(row)
 
     # Create a BytesIO buffer to receive the PDF data
@@ -68,6 +91,10 @@ def create_pdf(model_class, user):
                               ('GRID', (0, 0), (-1, -1), 1, '#000000')])
     table.setStyle(table_style)
     elements.append(table)
+    elements.append(Spacer(1, 0.5 * inch))
+
+    # Add the total amount at the bottom
+    elements.append(Paragraph(f"Total Amount: {format_currency(total_amount)}", normal_style))
     elements.append(Spacer(1, 0.5 * inch))
 
     # Build the PDF document
