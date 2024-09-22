@@ -36,8 +36,14 @@ class PaymentApiView(ListCreateAPIView):
 
         payment.save()
 
+        if float(loan.remaining_amount) - float(payment.amount) < 0:
+            loan.loan_cost = 0
+            #make positive
+            loan.loan_cost = float(payment.amount) -float(loan.remaining_amount)
+
         # Modify the remaining_amount of foreign key object 
-        loan.remaining_amount = float(loan.remaining_amount) - float(payment.amount)
+        loan.remaining_amount = 0
+        loan.loan_cost = 0
 
         # Save the foriegn key instance with modifications.
         loan.save()

@@ -1,7 +1,8 @@
 from django.shortcuts import render
-from django.http import FileResponse, HttpResponse
+from django.http import FileResponse, HttpResponse, JsonResponse
 from rest_framework.decorators import APIView, permission_classes
 from .create_pdf import create_pdf
+from .pdf_totals import create_staff_totals_pdf
 from rest_framework.permissions import AllowAny
 from .model_mapping import MODEL_MAPPING
 from rest_framework.permissions import IsAuthenticated
@@ -46,5 +47,20 @@ class Get_Pdf(APIView):
 
         return FileResponse(buffer, as_attachment=True, filename=f'{route}.pdf', content_type='application/pdf')
 
-       
+
+
+class Staff_totals_pdf_view(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """ View to generate PDF for staff users with all user totals """
+        if not request.user.is_staff:
+            return HttpResponse({"error": "Unauthorized access"}, status=403)
+
+        buffer = create_staff_totals_pdf()
+
+        buffer.seek(0)
+
+        return FileResponse(buffer, as_attachment=True, filename='staff_totals.pdf', content_type='application/pdf')
 

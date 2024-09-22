@@ -35,7 +35,7 @@ def create_pdf(model_class, user):
     model_fields = model_class._meta.fields
     
     # Extract field names for table header
-    table_header = [field.verbose_name.title() for field in model_fields if field.name not in ['id', 'user', 'user_id', 'account_number', 'saving_id', 'updated_at', 'image_url', 'password', 'otp', 'last_login', 'is_superuser', 'is_active','is_staff']]
+    table_header = [field.verbose_name.title() for field in model_fields if field.name not in ['id', 'user', 'user_id', 'account_number', 'saving_id', 'updated_at', 'created_at', 'image_url', 'password', 'otp', 'last_login', 'is_superuser', 'is_active','is_staff']]
 
     # Extract data rows for the table and calculate total for the "amount" field
     total_amount = 0
@@ -43,7 +43,9 @@ def create_pdf(model_class, user):
     for item in data:
         row = []
         for field in model_fields:
-            if field.name not in ['id', 'user', 'user_id', 'account_number', 'saving_id', 'updated_at', 'image_url', 'password', 'otp', 'last_login', 'is_superuser', 'is_active', 'is_staff']:
+
+            if field.name not in ['id', 'user', 'user_id', 'account_number', 'saving_id', 'updated_at', 'created_at', 'image_url', 'password', 'otp', 'last_login', 'is_superuser', 'is_active', 'is_staff']:
+
                 value = getattr(item, field.name)
                 # If the field is "amount", add it to the total
                 if field.name == 'amount' and value:
@@ -69,7 +71,7 @@ def create_pdf(model_class, user):
     normal_style = getSampleStyleSheet()["Normal"]
 
     # Add a heading
-    elements.append(Paragraph(f"{model_class.__name__.capitalize()} Report", heading_style))
+    elements.append(Paragraph(f"ADA Members {model_class.__name__.capitalize()} Report", heading_style))
     elements.append(Spacer(1, 0.5 * inch))
 
     # Format date fields in table data

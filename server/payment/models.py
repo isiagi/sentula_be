@@ -17,4 +17,5 @@ class Payment(models.Model):
     
 
     def __str__(self):
-        return self.reference
+        print(f"reference: {self.reference}")  # Add this to inspect
+        return str(self.reference) 

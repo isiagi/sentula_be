@@ -51,3 +51,6 @@ class CustomUser(AbstractUser):
     )
 
     otp = models.CharField(max_length=150, null=True, blank=True)
+
+    def __str__(self) -> str:
+        return self.username

@@ -11,10 +11,11 @@ class Loan(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     granteers = models.CharField(max_length=100)
     remaining_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    loan_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, default=0)
     reference_no = models.CharField(max_length=100, blank=True, unique=True)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
     def __str__(self):
-        return self.member_name
+        return str(self.reference_no)
