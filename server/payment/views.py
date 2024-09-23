@@ -80,7 +80,7 @@ class PaymentDetailApiView(RetrieveUpdateDestroyAPIView):
         loan = payment.reference
 
         # Update remaining_amount of the foreign key, foreign obj.
-        loan.remaining_amount = float(loan.remaining_amount) + float(payment.amount)
+        loan.remaining_amount = float(loan.remaining_amount) + float(payment.amount - loan.loan_cost)
         print(loan.remaining_amount, 'remaining_amount')
 
         # Update loan_cost
