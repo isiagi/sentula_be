@@ -111,6 +111,7 @@ class GetActiveLoanApiView(ListAPIView):
         savingset = Saving.objects.aggregate(total_saving = Sum('amount'))
         wagumbuzi = Wagubumbuzi.objects.aggregate(total_Wagubumbuzi = Sum('amount'))
         total_loan = queryset.aggregate(total_laon = Sum('amount'))
+        total_cost = queryset.aggregate(total_cost = Sum('loan_cost'))
         total_remaining_amount = queryset.filter(remaining_amount__gt=0).aggregate(total_remaining_amount = Sum('remaining_amount'))
         count = queryset.filter(remaining_amount__gt=0).count()
         user_count = CustomUser.objects.count()
@@ -118,6 +119,7 @@ class GetActiveLoanApiView(ListAPIView):
         data = {
             'total_laon': total_loan['total_laon'],
             'total_remaining_amount': total_remaining_amount['total_remaining_amount'],
+            'total_cost': total_cost['total_cost'],
             'loan_count': count,
             'total_saving': savingset['total_saving'],
             'total_users': user_count,
