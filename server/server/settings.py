@@ -189,7 +189,8 @@ USE_I18N = True
 USE_TZ = True
 
 # Actual directory
-MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'mediafiles')
+# MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'mediafiles')
+MEDIA_ROOT = ('/mediafiles/')
 
 # URL used to access the media
 MEDIA_URL = '/media/'
