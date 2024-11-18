@@ -38,4 +38,16 @@ urlpatterns = [
     path('api/user_profile/', include(profile_urls)),
     path('api/borrower/', include(borrower_urls)),
     path('api/pdfs/', include(pdfs_urls)),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT,)
+] 
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    # Custom view to serve media files in production
+    from django.views.static import serve
+    
+    urlpatterns += [
+        path('mediafiles/<path:path>', serve, {
+            'document_root': settings.MEDIA_ROOT,
+        }),
+    ]
