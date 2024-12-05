@@ -301,7 +301,7 @@ def createpassword(request):
         # Save user
         user.save()
 
-        token = Token.objects.get_or_create(user=user)
+        token, created = Token.objects.get_or_create(user=user)
 
         nv = UserSerializer(user)
 
