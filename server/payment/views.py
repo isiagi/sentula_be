@@ -2,12 +2,17 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from .serializers import PaymentSerializer
 from .models import Payment
 from rest_framework.exceptions import ValidationError
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 
 # Create your views here.
 
 class PaymentApiView(ListCreateAPIView):
     serializer_class = PaymentSerializer
     queryset = Payment.objects.all()
+
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['reference']
 
     def get_queryset(self):
         user = self.request.user
