@@ -112,35 +112,63 @@ class SavingDetailApiView(RetrieveUpdateDestroyAPIView):
     serializer_class = SavingSerializer
 
     def perform_update(self, serializer):
-        # Fetch the new amount from the validated data
+        """Handle the 5000 deduction logic during updates"""
         new_amount = int(serializer.validated_data.get('amount', 0))
-        
-        # Deduct 5000 from the new amount
         updated_amount = new_amount - 5000
-        
-        # Update the amount in the validated data
         serializer.validated_data['amount'] = updated_amount
-        
-        # Save the updated object with the new amount
-        serializer.save()  
-
-    def perform_destroy(self, instance):        # Fetch the user associated with the instance
+        serializer.save()
+    
+    def is_first_entry_of_month(self, instance):
+        """Check if this is the first entry of the month for this user"""
         user = instance.user_id
+        payment_date = instance.date_of_payment
+        
+        # Get all savings for this user in this month, ordered by date
+        month_savings = Saving.objects.filter(
+            user_id=user, 
+            date_of_payment__year=payment_date.year,
+            date_of_payment__month=payment_date.month
+        ).order_by('date_of_payment')
+        
+        # If this instance is the first one (or the only one), return True
+        return month_savings.first().id == instance.id
 
-        print(user, 'user')
-
-        # Check if it's the first entry of the month
-        today = instance.date_of_payment
-        if Saving.objects.filter(user_id=user, date_of_payment__month=today.month).count() == 1:
-            # Delete all user Wagubumbuzi objects of that month
-            Wagubumbuzi.objects.filter(
-                user=user,
-                date_created__year=today.year,
-                date_created__month=today.month
-            ).delete()
-
-        # Proceed with the deletion of the Saving instance
-        instance.delete()
+    def perform_destroy(self, instance):
+        try:
+            user = instance.user_id
+            payment_date = instance.date_of_payment
+            
+            # Only delete Wagubumbuzi if this is the first entry of the month
+            if self.is_first_entry_of_month(instance):
+                # Get count before deletion for logging
+                wagubumbuzi_count = Wagubumbuzi.objects.filter(
+                    user=user,
+                    date_created__year=payment_date.year,
+                    date_created__month=payment_date.month
+                ).count()
+                
+                # Log the operation
+                print(
+                    f"Deleting {wagubumbuzi_count} Wagubumbuzi records for user {user} "
+                    f"for {payment_date.year}-{payment_date.month} as first saving entry is being deleted"
+                )
+                
+                # Delete the Wagubumbuzi records
+                deleted_count, _ = Wagubumbuzi.objects.filter(
+                    user=user,
+                    date_created__year=payment_date.year,
+                    date_created__month=payment_date.month
+                ).delete()
+                
+                print(f"Successfully deleted {deleted_count} Wagubumbuzi records")
+            
+            # Delete the saving instance
+            instance.delete()
+            print(f"Successfully deleted Saving {instance.id}")
+            
+        except Exception as e:
+            print(f"Error during Saving deletion: {str(e)}")
+            raise
 
 # API route to handle GET Data Sum By week in a month
 class GetSavingByWeekApiView(ListAPIView):
