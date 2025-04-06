@@ -1,5 +1,5 @@
 from rest_framework.generics import ListAPIView, DestroyAPIView
-from .models import Wagubumbuzi
+from .models import Wagubumbuzi, WagubumbuziReduction
 from .serializers import WagubumbuziSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
@@ -45,6 +45,35 @@ class ReduceWagubumbuziApiView(ListAPIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAdminUser]
 
+
+    def get(self, request, *args, **kwargs):
+        # Get the current active reduction
+        active_reduction = WagubumbuziReduction.get_active_reduction()
+        
+        # Get the current total of all Wagubumbuzi amounts
+        total_current = Wagubumbuzi.get_total_amount()
+        
+        if active_reduction:
+            response_data = {
+                'total_current': float(total_current),
+                'amount_reduced': float(active_reduction.amount_reduced),
+                'total_after_reduction': float(active_reduction.total_after_reduction),
+                'created_at': active_reduction.created_at,
+                'updated_at': active_reduction.updated_at,
+                'is_active': active_reduction.is_active
+            }
+        else:
+            # No active reduction found
+            response_data = {
+                'total_current': float(total_current),
+                'amount_reduced': 0.00,
+                'total_after_reduction': float(total_current),
+                'is_active': False
+            }
+            
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
     def post(self, request, *args, **kwargs):
         # Get the amount to reduce from the request
         amount_to_reduce = request.data.get('amount')
@@ -64,7 +93,9 @@ class ReduceWagubumbuziApiView(ListAPIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         # Calculate total current amount
-        total_current = Wagubumbuzi.objects.aggregate(Sum('amount'))['amount__sum'] or Decimal('0')
+
+        total_current = Wagubumbuzi.get_total_amount()
+
 
         # Check if reduction is possible
         if total_current < amount_to_reduce:
@@ -72,26 +103,21 @@ class ReduceWagubumbuziApiView(ListAPIView):
                 'error': 'Insufficient total amount to reduce'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Calculate total after reduction
-        total_after_reduction = total_current - amount_to_reduce
 
-        # Update all entries:
-        # 1. Add the new reduction amount to amount_reduced
-        # 2. Set total_after_reduction for admin users
-        admin_users = CustomUser.objects.filter(is_staff=True)
+        # Create a new WagubumbuziReduction record
+        reduction = WagubumbuziReduction(
+            amount_reduced=amount_to_reduce
+        )
         
-        # Update all entries' amount_reduced
-        Wagubumbuzi.objects.all().update(
-            amount_reduced=F('amount_reduced') + (amount_to_reduce / Wagubumbuzi.objects.count())
-        )
-
-        # Update admin entries' total_after_reduction
-        Wagubumbuzi.objects.filter(user__in=admin_users).update(
-            total_after_reduction=total_after_reduction
-        )
+        # Save the reduction (this will auto-calculate total_after_reduction)
+        reduction.save()
 
         # Return the results
         return Response({
-            'total_after_reduction': float(total_after_reduction),
-            'amount_reduced': float(amount_to_reduce)
+            'total_current': float(total_current),
+            'total_after_reduction': float(reduction.total_after_reduction),
+            'amount_reduced': float(reduction.amount_reduced),
+            'created_at': reduction.created_at,
+            'is_active': reduction.is_active
+
         }, status=status.HTTP_200_OK)
