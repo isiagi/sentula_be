@@ -160,6 +160,8 @@ env.read_env(env_file)
 
 import dj_database_url
 
+print(env("DATABASE_URL"))
+
 DATABASES = {
     'default': dj_database_url.config(
         default=env("DATABASE_URL"),

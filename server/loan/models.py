@@ -16,6 +16,7 @@ class Loan(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+    archived = models.BooleanField(default=False)  # New field to mark archived loans
 
     def __str__(self):
         return str(self.reference_no)

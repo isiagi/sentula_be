@@ -17,6 +17,8 @@ from .permissions import IsOwnerOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from wagubumbuzi.models import Wagubumbuzi
 from rest_framework import filters
+from django.utils import timezone
+import datetime
 # Create your views here.
 
 @api_view(['GET'])
@@ -31,9 +33,8 @@ class GetLoanApiView(ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     serializer_class = LoanSerializer
-    # queryset = Loan.objects.all()
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ['member_id']
+    filterset_fields = ['member_id', 'archived']  # Add archived to filterable fields
     ordering_fields = ['created_at']
     ordering = ['-created_at']
 
@@ -44,9 +45,32 @@ class GetLoanApiView(ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        current_year = timezone.now().year
+
+        print(self.request.query_params)
+        
+        # Get 'archived' parameter from request query params, default to showing current year loans
+        show_archived = self.request.query_params.get('archived', 'false').lower() == 'true'
+
+        print('hello')
+        
         if user.is_staff:
-            return Loan.objects.all()
-        return Loan.objects.filter(user=user.id)
+            queryset = Loan.objects.all()
+            print(queryset.count(), 'test man')
+        else:
+            queryset = Loan.objects.filter(user=user.id)
+            
+        # Filter based on year
+        if show_archived:
+            # Show loans from previous years (archived)
+            print('archived reached')
+            data = queryset.filter(created_at__year__lt=current_year)
+            print(data.count(), 'test man here')
+
+            return data
+        else:
+            # Show current year loans (default)
+            return queryset.filter(created_at__year=current_year)
 
     # Function to generate unique loan reference
     def generate_unique_identifier(self, length=5, id='hello'):
