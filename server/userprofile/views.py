@@ -56,6 +56,8 @@ class UserProfileDetailApiView(RetrieveUpdateDestroyAPIView):
         
         # If the user is staff, allow changing is_staff status
         if self.request.user.is_staff or self.request.user.is_superuser:
+
+            print("staff", self.request.data.get('is_staff'))
             # Convert string representation to boolean
             is_staff_value = self.request.data.get('is_staff')
             if isinstance(is_staff_value, str):
