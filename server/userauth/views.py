@@ -362,7 +362,7 @@ def forgot_password(request):
     member_id = member_id.strip()
     user = CustomUser.objects.filter(username=member_id).first()
 
-    if user:
+    if user and user.is_staff or user.is_superuser:
         # Make encrypted text for the user id
         encoded_pk = urlsafe_base64_encode(force_bytes(user.pk))
 
