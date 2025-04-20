@@ -46,31 +46,24 @@ class GetLoanApiView(ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
         current_year = timezone.now().year
-
-        print(self.request.query_params)
         
-        # Get 'archived' parameter from request query params, default to showing current year loans
-        show_archived = self.request.query_params.get('archived', 'false').lower() == 'true'
-
-        print('hello')
-        
-        if user.is_staff:
-            queryset = Loan.objects.all()
-            print(queryset.count(), 'test man')
-        else:
-            queryset = Loan.objects.filter(user=user.id)
+        # Only staff or admins can use the archived filter parameter
+        if user.is_staff or user.is_superuser:
+            show_archived = self.request.query_params.get('archived', 'false').lower() == 'true'
             
-        # Filter based on year
-        if show_archived:
-            # Show loans from previous years (archived)
-            print('archived reached')
-            data = queryset.filter(created_at__year__lt=current_year)
-            print(data.count(), 'test man here')
-
-            return data
+            if user.is_staff:
+                queryset = Loan.objects.all()
+            else:
+                queryset = Loan.objects.filter(user=user.id)
+                
+            # Apply year filtering only for staff/admin based on archived parameter
+            if show_archived:
+                return queryset.filter(created_at__year__lt=current_year)
+            else:
+                return queryset.filter(created_at__year=current_year)
         else:
-            # Show current year loans (default)
-            return queryset.filter(created_at__year=current_year)
+            # Regular users get all their data without archived filtering
+            return Loan.objects.filter(user=user.id)
 
     # Function to generate unique loan reference
     def generate_unique_identifier(self, length=5, id='hello'):
