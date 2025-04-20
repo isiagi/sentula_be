@@ -2,7 +2,7 @@ from django.http import QueryDict
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from django.contrib.auth.models import User
 from rest_framework.response import Response
-from .serializers import UserSerializer, EmailSerializer, ResetPasswordSerializer, PasswordSerializer, MemberSerializer, SignSerializer, EmailSendSerializer
+from .serializers import UserSerializer, EmailSerializer, ResetPasswordSerializer, PasswordSerializer, MemberSerializer, SignSerializer, EmailSendSerializer, MembershipSerializer
 from django.shortcuts import get_object_or_404
 from rest_framework.authtoken.models import Token
 
@@ -342,47 +342,51 @@ def logout(request):
 
 
 
-
+# allow any
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def forgot_password(request):
-    # Deserialize request data,
-    serializer = EmailSerializer(data=request.data)
-
-    # Check if data is valid, matching the model / serializer requirements
-    serializer.is_valid(raise_exception=True)
-
-    # Access the email from pass data from the request
-    email = request.data['email']
-
-    print("email", email)
+   
     
-    # Find the first entry of the email from the user table
-    user = CustomUser.objects.filter(email=email).first()
+    # Extract member_id from the request data in the format it's coming in
+    member_id = None
+    for key in request.data:
+        if key.startswith('membership[Member_Id]'):
+            member_id = request.data[key]
+            break
+    
+    if not member_id:
+        return Response({"message": "Member ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Find the user by member ID (removing any leading/trailing spaces)
+    member_id = member_id.strip()
+    user = CustomUser.objects.filter(username=member_id).first()
 
     if user:
-        # Make encrptyed text for the user id
+        # Make encrypted text for the user id
         encoded_pk = urlsafe_base64_encode(force_bytes(user.pk))
 
         # Generate Token with user object
         token = PasswordResetTokenGenerator().make_token(user)
 
-        # User reverse to get url path of url with name 'reset_password' in url file
-        # And passing some data along matching the url
-
+        # Get reset URL
         reset_url = reverse('reset_password', kwargs={'encoded_pk': encoded_pk, 'token': token})
 
         # Make reset Link
-        reset_link = f"http://127.0.0.1:8000{reset_url}"
+        reset_link = f"https://adasacco.vercel.app{reset_url}"
 
-        # Send reset link by email.
-        send('Reset Password Link', reset_link, [email])
-
-        return Response({"message": "Password reset link sent to your email"}, status=status.HTTP_200_OK)
+        # Send reset link by email - you'll need the user's email here
+        if hasattr(user, 'email') and user.email:
+            send('Reset Password Link', reset_link, [user.email])
+            return Response({"message": "Password reset link sent to your email"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"message": "User email not found"}, status=status.HTTP_404_NOT_FOUND)
     
     return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['PATCH'])
+@permission_classes([AllowAny])
 def reset_password(request, *args, **kwargs):
     # Deserialize request data,
     serializer = ResetPasswordSerializer(data=request.data, context={'kwargs': kwargs})
@@ -416,4 +420,29 @@ class GetTotalApiView(ListAPIView):
         }
 
         return Response(data)
+    
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication, SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def toggle_loan_archive(request, pk):
+    try:
+        loan = Loan.objects.get(pk=pk)
+        
+        # Check if user has permission
+        if not request.user.is_staff and loan.user != request.user:
+            return Response({"error": "You don't have permission to modify this loan"}, 
+                           status=status.HTTP_403_FORBIDDEN)
+        
+        # Toggle archive status
+        loan.archived = not loan.archived
+        loan.save()
+        
+        return Response({
+            "id": loan.id,
+            "reference_no": loan.reference_no,
+            "archived": loan.archived
+        })
+    except Loan.DoesNotExist:
+        return Response({"error": "Loan not found"}, status=status.HTTP_404_NOT_FOUND)
     

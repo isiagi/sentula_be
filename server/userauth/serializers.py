@@ -61,6 +61,13 @@ class PasswordSerializer(serializers.Serializer):
     class Meta:
         fields = ['password', 'membership']
 
+class MembershipSerializer(serializers.Serializer):
+   
+    membership = serializers.CharField()
+
+    class Meta:
+        fields = ['membership']
+
 
 class ResetPasswordSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
