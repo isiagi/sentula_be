@@ -54,11 +54,15 @@ class UserProfileDetailApiView(RetrieveUpdateDestroyAPIView):
         user.first_name = self.request.data.get('first_name')
         user.email = self.request.data.get('email')
         
-        # Set is_staff only if the user is an admin
-        
-        if self.request.user.is_staff:  # Assuming the current user is the admin
-            user.is_staff = self.request.data.get('is_staff', user.is_staff)
-       
+        # If the user is staff, allow changing is_staff status
+        if self.request.user.is_staff:
+            # Convert string representation to boolean
+            is_staff_value = self.request.data.get('is_staff')
+            if isinstance(is_staff_value, str):
+                # Convert string to boolean properly
+                is_staff_value = is_staff_value.lower() == 'true'
+            
+            user.is_staff = is_staff_value if is_staff_value is not None else user.is_staff
         
         # Save user model
         user.save()
