@@ -19,6 +19,10 @@ from wagubumbuzi.models import Wagubumbuzi
 from rest_framework import filters
 from django.utils import timezone
 import datetime
+from rest_framework import status
+from rest_framework.decorators import permission_classes, authentication_classes
+from rest_framework.response import Response
+from django.db.models import Q
 # Create your views here.
 
 @api_view(['GET'])
@@ -60,7 +64,9 @@ class GetLoanApiView(ListCreateAPIView):
             if show_archived:
                 return queryset.filter(created_at__year__lt=current_year)
             else:
-                return queryset.filter(created_at__year=current_year)
+                return queryset.filter(
+            Q(created_at__year=current_year) | Q(archived=False)
+        )
         else:
             # Regular users get all their data without archived filtering
             return Loan.objects.filter(user=user.id)
@@ -144,6 +150,31 @@ class GetActiveLoanApiView(ListAPIView):
         }
 
         return Response(data)
+    
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication, SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def toggle_loan_archive(request, pk):
+    try:
+        loan = Loan.objects.get(pk=pk)
+        
+        # Check if user has permission
+        if not request.user.is_staff and loan.user != request.user:
+            return Response({"error": "You don't have permission to modify this loan"}, 
+                           status=status.HTTP_403_FORBIDDEN)
+        
+        # Toggle archive status
+        loan.archived = not loan.archived
+        loan.save()
+        
+        return Response({
+            "id": loan.id,
+            "reference_no": loan.reference_no,
+            "archived": loan.archived
+        })
+    except Loan.DoesNotExist:
+        return Response({"error": "Loan not found"}, status=status.HTTP_404_NOT_FOUND)
     
 
 
