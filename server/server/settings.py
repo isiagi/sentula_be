@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'userauth',
     'saving',
-    'wagubumbuzi',
+    'wagubumbuzi.apps.WagubumbuziConfig',
     'loan',
     'payment',
     'userprofile',
