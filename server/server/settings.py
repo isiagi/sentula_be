@@ -204,8 +204,10 @@ USE_TZ = True
 # Actual directory
 # MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'mediafiles')
 # Change this in settings.py
-MEDIA_ROOT = os.path.join('/opt/render/project/src', 'mediafiles')  # Base project directory
-MEDIA_URL = '/mediafiles/'
+if DEBUG:
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')  # store in your project folder
+else:
+    MEDIA_ROOT = os.path.join('/opt/render/project/src', 'mediafiles')
 
 # Enable serving files through whitenoise
 WHITENOISE_USE_FINDERS = True

@@ -43,35 +43,44 @@ class UserProfileDetailApiView(RetrieveUpdateDestroyAPIView):
 
     # This runs during updating of the object
     def perform_update(self, serializer):
-        # Get object to be updated
-        instance = self.get_object()
+        try:
+            # Get object to be updated
+            instance = self.get_object()
 
-        # Access user using foreign key user in the profile obj
-        user = instance.user
+            # Access user using foreign key user in the profile obj
+            user = instance.user
 
-        # Update user data from the profile route.
-        user.last_name = self.request.data.get('last_name')
-        user.first_name = self.request.data.get('first_name')
-        user.email = self.request.data.get('email')
-        
-        # If the user is staff, allow changing is_staff status
-        if self.request.user.is_staff or self.request.user.is_superuser:
+            print(self.request.data, 'self.request.data')
 
-            print("staff", self.request.data.get('is_staff'))
-            # Convert string representation to boolean
-            is_staff_value = self.request.data.get('is_staff')
-            if isinstance(is_staff_value, str):
-                # Convert string to boolean properly
-                is_staff_value = is_staff_value.lower() == 'true'
+            # Update user data from the profile route, only if provided
+            if 'last_name' in self.request.data:
+                user.last_name = self.request.data.get('last_name')
+            if 'first_name' in self.request.data:
+                user.first_name = self.request.data.get('first_name')
+            if 'email' in self.request.data:
+                user.email = self.request.data.get('email')
             
-            user.is_staff = is_staff_value if is_staff_value is not None else user.is_staff
-        
-        # Save user model
-        user.save()
+            # If the user is staff, allow changing is_staff status
+            if self.request.user.is_staff or self.request.user.is_superuser:
+                is_staff_value = self.request.data.get('is_staff')
+                if is_staff_value is not None:
+                    if isinstance(is_staff_value, str):
+                        # Convert string to boolean properly
+                        is_staff_value = is_staff_value.lower() == 'true'
+                    user.is_staff = is_staff_value
+                    print(f"Staff status updated to: {user.is_staff}")
+            
+            # Save user model
+            user.save()
 
-        # Save Userprofile model
-        return serializer.save()
-    
+            # Save Userprofile model
+            return serializer.save()
+        except Exception as e:
+            print(f"Error in perform_update: {str(e)}")
+            # Re-raise the exception to maintain the 500 error
+            # or handle it differently if you prefer
+            raise
+        
 
 # Route to get user profile by user id
 class GetUserProfileApiView(ListAPIView):
