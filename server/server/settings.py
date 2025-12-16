@@ -23,9 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-7279xm&pj_!(x)@e079-^nh*=)mxx3#a!66$_d_y$k5k_@60f='
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['10.0.2.2', '127.0.0.1','localhost',  'agalyawamm-backend.onrender.com', 'ada-backend-6cir.onrender.com']
+ALLOWED_HOSTS = ['10.0.2.2', '127.0.0.1','localhost','eb1866b9dd53.ngrok-free.app','agalyawamm-backend.onrender.com', 'ada-backend-6cir.onrender.com']
 
 
 # Application definition
@@ -136,6 +136,9 @@ env_file = os.path.join(BASE_DIR, ".env")
 # Load environment variables from the .env file (if it exists)
 env.read_env(env_file)
 
+# Test if env is reading correctly
+print("DATABASE_URL:", env("DATABASE_URL", default="Not Found"))
+
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -150,11 +153,11 @@ env.read_env(env_file)
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': env("DB_NAME"),
-#         'HOST': env("DB_HOST"),
-#         'PORT': env("DB_PORT"),
-#         'PASSWORD': env("DB_PASSWORD"),
-#         'USER': env("DB_USER"),
+#         'NAME': "adatest_2o4x",
+#         'HOST': "dpg-d4usbkm3jp1c73e96qo0-a.frankfurt-postgres.render.com",
+#         'PORT': 5432,
+#         'PASSWORD': "XtDlVOHdVviP4gGtemo3c9uOuAjtBknS",
+#         'USER': "adatest_2o4x_user",
 #     }
 # }
 
