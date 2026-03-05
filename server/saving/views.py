@@ -43,63 +43,40 @@ class GetSavingApiView(ListCreateAPIView):
     
     # function to overide create
     def perform_create(self, serializer):
-        user = self.request.user
 
-        # user
         creating_user = serializer.validated_data['member_id']
-
-        # Get user by membership_id
         own_user = get_object_or_404(CustomUser, username=creating_user)
 
-        # check if it's the first entry of the month
-        #today = datetime.now()
-        #first_of_month = today.replace(day=1, hour=0, minute=0,second=0, microsecond=0)
-
-        # Extracting the date_of_payment date
         date_of_payment = serializer.validated_data['date_of_payment']
-        current_month = date_of_payment.month
+        amount_paid = int(serializer.validated_data['amount'])
         current_year = date_of_payment.year
 
-        # Find the earliest date_of_payment date of the same month and year
-        min_date = Saving.objects.filter(
+        # total wagubumbuzi already paid
+        total_wagubumbuzi = Wagubumbuzi.objects.filter(
+            user=own_user,
+            date_created__year=current_year
+        ).aggregate(total=Sum('amount'))['total'] or 0
 
-            member_id=creating_user,
+        remaining_wagubumbuzi = 60000 - total_wagubumbuzi
 
-            date_of_payment__month=current_month,
-            date_of_payment__year=current_year
-        ).aggregate(Min('date_of_payment'))['date_of_payment__min']
+        # If wagubumbuzi not finished
+        if remaining_wagubumbuzi > 0:
 
-        if min_date is None or date_of_payment == min_date:
+            wagubumbuzi_payment = min(amount_paid, remaining_wagubumbuzi)
 
-                # Check if it's the first entry of the day
-            if Saving.objects.filter(member_id=creating_user, date_of_payment=date_of_payment).count() == 0:
+            Wagubumbuzi.objects.create(
+                user=own_user,
+                amount=wagubumbuzi_payment,
+                date_created=date_of_payment
+            )
 
-                serializer.validated_data['amount'] = int(serializer.validated_data['amount']) - 5000
+            saving_amount = amount_paid - wagubumbuzi_payment
 
-                # Save the Saving object
-                saving_instance = serializer.save(user_id=own_user)
-
-                cur = saving_instance.member_id
-
-                print('cul', cur)
-
-                # Add 5000 to wagubumbuzi
-
-                wagubumbuzi_serializer = WagubumbuziSerializer(data={'user': cur, 'amount': 5000, 'saving_id': saving_instance, 'date_created': date_of_payment})
-
-
-                if wagubumbuzi_serializer.is_valid():
-                    print("hello")
-                    wagubumbuzi_serializer.save(user=cur)
-                else:
-                    saving_instance.delete()
-                    # wagubumbuzi_serializer.errors
-                    raise serializer.ValidationError("Failed to create wagubumbuzi object.")
-            
-            else:
+            if saving_amount > 0:
+                serializer.validated_data['amount'] = saving_amount
                 serializer.save(user_id=own_user)
         else:
-            # save the Saving Object
+            # wagubumbuzi already completed
             serializer.save(user_id=own_user)
         
     
